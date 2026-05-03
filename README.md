@@ -203,6 +203,196 @@ To transfer build output between pipeline stages.
 ```text
 Build → Artifact → Staging → Approval → Swap → Production
 ```
+# 🔁 Blue-Green Deployment & Rollback (Azure App Service)
+
+---
+
+## 📌 What is Blue-Green Deployment?
+
+Blue-Green deployment is a strategy to release applications with **zero downtime**.
+
+### 🔹 Terminology
+
+| Environment | Meaning                         |
+| ----------- | ------------------------------- |
+| 🔵 Blue     | Current live production version |
+| 🟢 Green    | New version (staging slot)      |
+
+---
+
+## 🔄 Deployment Flow
+
+```text
+User Traffic → Production (Blue)
+
+Pipeline Flow:
+→ Deploy to Staging (Green)
+→ Test / Validate
+→ Approval
+→ Slot Swap
+→ Green becomes Production 🚀
+```
+
+---
+
+## ⚙️ Azure Implementation
+
+Azure uses **Deployment Slots** to implement Blue-Green:
+
+* Production slot → Live traffic
+* Staging slot → New deployment
+
+---
+
+## 🔁 What is Slot Swap?
+
+Slot swap **exchanges** content between staging and production.
+
+### 🔹 Before Swap
+
+```text
+Production → Version V1
+Staging → Version V2
+```
+
+### 🔹 After Swap
+
+```text
+Production → Version V2 ✅
+Staging → Version V1
+```
+
+👉 Swap = **exchange**, not copy
+
+---
+
+## 🚀 Benefits
+
+* ✅ Zero downtime deployment
+* ✅ Safe testing before release
+* ✅ Instant rollback possible
+* ✅ No traffic interruption
+
+---
+
+## 🔍 Swap with Preview (Advanced)
+
+Azure provides **Swap with Preview**:
+
+### 🔹 Flow
+
+1. Apply config changes first
+2. Validate app
+3. Complete swap manually
+
+👉 Useful when:
+
+* App settings differ between slots
+* Need validation before full swap
+
+---
+
+## 🔥 Rollback Strategy (VERY IMPORTANT)
+
+---
+
+### 🟢 Method 1: Instant Rollback (Best Practice)
+
+👉 Simply perform **swap again**
+
+```text
+Production ↔ Staging
+```
+
+### Result:
+
+```text
+Production → Old version restored
+```
+
+✅ Fast (seconds)
+✅ Zero downtime
+
+---
+
+### 🟢 Method 2: Redeploy Previous Version
+
+1. Pick old artifact
+2. Deploy to staging
+3. Swap again
+
+---
+
+### 🟢 Method 3: Manual Portal Rollback
+
+* Go to App Service
+* Deployment Slots
+* Click Swap
+
+---
+
+## ⚙️ Rollback in Pipeline (Optional)
+
+```yaml
+- stage: Rollback
+  jobs:
+  - job: RollbackJob
+    steps:
+    - task: AzureAppServiceManage@0
+      inputs:
+        azureSubscription: 'Azure for Students(...)'
+        Action: 'Swap Slots'
+        WebAppName: 'your-app-name'
+        ResourceGroupName: 'your-rg'
+        SourceSlot: 'staging'
+```
+
+---
+
+## 🧠 Real-World Deployment Flow
+
+```text
+Deploy → Staging
+↓
+Test / Monitor
+↓
+Approval
+↓
+Swap → Production
+↓
+Monitor
+↓
+Issue detected?
+↓
+Swap back (Rollback) 🔁
+```
+
+---
+
+## ⚠️ Best Practices
+
+* Always test in staging
+* Use approval before production
+* Monitor logs after deployment
+* Keep previous version in staging
+* Avoid direct production deployment
+
+---
+
+## 💬 Interview Answer (Strong 🔥)
+
+> I implemented blue-green deployment using Azure App Service deployment slots. The application is deployed to a staging slot first, and after validation and approval, I perform a slot swap to production. In case of issues, I can instantly rollback by swapping the slots again, ensuring zero downtime.
+
+---
+
+## 🧾 Key Takeaway
+
+```text
+Deploy → Staging → Swap → Production
+Issue? → Swap Back → Rollback
+```
+
+---
 
 ---
 
